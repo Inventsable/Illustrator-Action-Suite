@@ -209,11 +209,11 @@ function ActionParameters(arr, parent) {
         else if (!arguments[i].typename)
           this.push(new ActionParameter(arguments[i]));
       }
-      this.parent.parameterCount = this.length;
+      if (this.parent) this.parent["parameterCount"] = this.length;
     },
     removeAll: function () {
       for (var i = this.length; !!i; i--) this.pop();
-      this.parent.parameterCount = this.length;
+      if (this.parent) this.parent["parameterCount"] = this.length;
     },
   });
   arr.parent = parent;
@@ -231,33 +231,35 @@ function ActionEvents(arr, parent) {
         else if (!arguments[i].typename)
           this.push(new ActionEvent(arguments[i]));
       }
-      this.parent.eventCount = this.length;
+      if (this.parent) this.parent["eventCount"] = this.length;
     },
     removeAll: function () {
       for (var i = this.length; !!i; i--) this.pop();
-      this.parent.eventCount = this.length;
+      if (this.parent) this.parent["eventCount"] = this.length;
     },
   });
   arr.parent = parent;
   arr.typename = "ActionEvents";
   return arr;
 }
-function Actions(arr, parent) {
+function Actions(arr, parent, gID) {
+  if (!parent) {
+    alert("Created with no parent: " + gID);
+  }
   arr = arr || [];
   extendPrototype(arr, {
     add: function () {
-      // var iterator = ActionBoyIsArray(arguments[0]) ? arguments[0] : arguments;
       for (var i = 0; i < arguments.length; i++) {
         arguments[i]["parent"] = this;
         if (arguments[i].typename && arguments[i].typename == "Action")
           this.push(arguments[i]);
         else if (!arguments[i].typename) this.push(new Action(arguments[i]));
       }
-      this.parent.actionCount = this.length;
+      if (this.parent) this.parent["actionCount"] = this.length;
     },
     removeAll: function () {
       for (var i = this.length; !!i; i--) this.pop();
-      this.parent.actionCount = this.length;
+      if (this.parent) this.parent["actionCount"] = this.length;
     },
     getByName: function (query) {
       for (var i = 0; i < this.length; i++)
@@ -325,7 +327,7 @@ function ActionSet(params) {
   this.version = 3;
   this.isOpen = 0;
   this.actionCount = 0;
-  this.actions = new Actions([], this);
+  this.actions = new Actions([], this, 1);
   this.rawtext = null;
   var data;
   try {
@@ -357,9 +359,20 @@ function ActionSet(params) {
     }
     if (data) {
       for (var key in data) {
-        if (key == "actions") this.actions = new Actions(data.actions);
+        if (key == "actions") this.actions = new Actions(data.actions, this, 2);
         else if (key == "actionCount") this.actionCount = data.actions.length;
         else this[key] = data[key];
+      }
+      if (
+        this.actions &&
+        this.actions.length &&
+        this.actions.typename == "ActionCollection"
+      ) {
+        // ? This returns no parent chain
+      } else {
+        // But this does? If ActionSet is generated with no actions key?
+        // What gives?
+        alert("Something went wrong");
       }
     }
   } catch (err) {
@@ -558,8 +571,12 @@ ActionSet.prototype = {
         keylist = [];
       for (key in obj) if (!shouldOmit.test(key)) keylist.push(key);
       keylist = sortByPriority(keylist, obj.typename);
-      for (var kk = 0; kk < keylist.length; kk++)
-        temp[keylist[kk]] = obj[keylist[kk]];
+      for (var kk = 0; kk < keylist.length; kk++) {
+        if (/^\/([^\s-]*)-\d{1,}/.test(keylist[kk])) {
+          var enumName = keylist[kk].replace(/-.*/, "");
+          temp[enumName + "Count"] = temp[enumName + "s"].length;
+        } else temp[keylist[kk]] = obj[keylist[kk]];
+      }
       return temp;
     }
     function sortByPriority(keys, typename) {
