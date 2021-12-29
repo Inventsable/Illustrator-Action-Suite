@@ -1,3 +1,5 @@
+#### <p align="right">← Back to API</p>
+
 ### <p align="right">ActionSet > ActionCollection > <u>Action</u></p>
 
 # **class** Action
@@ -55,14 +57,11 @@ var myAction = new Action({
 
 // Then add Events to this action:
 myAction.events.add(
-  new Event() // this is placeholder content for now
+  new Event() // this is placeholder content
 );
 
 // And finally add this action to the set:
 mySet.actions.add(myAction);
-
-// Allowing us to run it directly:
-mySet.run("openColorPicker");
 ```
 
 ---
@@ -75,11 +74,11 @@ Loads the current action into memory _if existing in a set_. Actions cannot inte
 
 ```js
 // We always need a set first:
-var mySet = new ActionSet("~/desktop/sampleActions.aia");
+var mySet = new ActionSet(new File("~/desktop/sampleActions.aia"));
 
 var fakeAction = new Action({
   name: "newAction",
-}); // It's only fake because I haven't defined the spec
+});
 mySet.actions.add(fakeAction);
 
 // We can load this into memory and show in the Actions panel:

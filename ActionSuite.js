@@ -293,6 +293,8 @@ function ActionEvent(obj, parent) {
   for (var key in obj)
     if (key == "parameters")
       this.parameters = new ActionParameters(obj.parameters, this);
+    else if (key == "parameterCount")
+      this.parameterCount = obj.parameters.length;
     else this[key] = obj[key];
 }
 function Action(obj, parent) {
@@ -302,6 +304,7 @@ function Action(obj, parent) {
   this.events = new ActionEvents([], this);
   for (var key in obj)
     if (key == "events") this.events = new ActionEvents(obj.events, this);
+    else if (key == "eventCount") this.eventCount = obj.events.length;
     else this[key] = obj[key];
 }
 Action.prototype.run = function () {
@@ -354,9 +357,9 @@ function ActionSet(params) {
     }
     if (data) {
       for (var key in data) {
-        if (key == "actions") {
-          this.actions = new Actions(data.actions);
-        } else this[key] = data[key];
+        if (key == "actions") this.actions = new Actions(data.actions);
+        else if (key == "actionCount") this.actionCount = data.actions.length;
+        else this[key] = data[key];
       }
     }
   } catch (err) {
