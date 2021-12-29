@@ -1,0 +1,62 @@
+/version 3
+/name [ 10
+	44796e616d6963536574
+]
+/isOpen 1
+/actionCount 0
+/action-1 {
+	/name [ 13
+		44796e616d6963416374696f6e
+	]
+	/keyIndex 8
+	/colorIndex 5
+	/isOpen 0
+	/event-1 {
+		/internalName (ai_plugin_setColor)
+		/localizedName [ 13
+			736574436f6c6f724576656e74
+		]
+		/hasDialog 0
+		/parameter-1 {
+			/key 1768186740
+			/showInPalette -1
+			/type (ustring)
+			/value [ 12
+				5374726f6b6520636f6c6f72
+			]
+		}
+		/parameter-2 {
+			/key 1718185068
+			/showInPalette -1
+			/type (boolean)
+			/value 0
+		}
+		/parameter-3 {
+			/key 1954115685
+			/showInPalette -1
+			/type (enumerated)
+			/name [ 9
+				52474220636f6c6f72
+			]
+			/value 2
+		}
+		/parameter-4 {
+			/key 1919247406
+			/showInPalette -1
+			/type (real)
+			/value 239.0
+		}
+		/parameter-5 {
+			/key 1735550318
+			/showInPalette -1
+			/type (real)
+			/value 239.0
+		}
+		/parameter-6 {
+			/key 1651275109
+			/showInPalette -1
+			/type (real)
+			/value 239.0
+		}
+	}
+}

@@ -246,6 +246,7 @@ function Actions(arr, parent) {
   arr = arr || [];
   extendPrototype(arr, {
     add: function () {
+      // var iterator = ActionBoyIsArray(arguments[0]) ? arguments[0] : arguments;
       for (var i = 0; i < arguments.length; i++) {
         arguments[i]["parent"] = this;
         if (arguments[i].typename && arguments[i].typename == "Action")
@@ -291,8 +292,7 @@ function ActionEvent(obj, parent) {
   this.parameters = new ActionParameters([], this);
   for (var key in obj)
     if (key == "parameters")
-      for (var i = 0; i < obj.parameters.length; i++)
-        this.parameters.add(obj.parameters[i]);
+      this.parameters = new ActionParameters(obj.parameters, this);
     else this[key] = obj[key];
 }
 function Action(obj, parent) {
@@ -301,9 +301,7 @@ function Action(obj, parent) {
   this.eventCount = 0;
   this.events = new ActionEvents([], this);
   for (var key in obj)
-    if (key == "events")
-      for (var i = 0; i < obj.events.length; i++)
-        this.events.add(obj.events[i]);
+    if (key == "events") this.events = new ActionEvents(obj.events, this);
     else this[key] = obj[key];
 }
 Action.prototype.run = function () {
@@ -328,264 +326,57 @@ function ActionSet(params) {
   this.rawtext = null;
   var data;
   try {
-    // If this is a string:
     if (/string/i.test(typeof params)) {
-      // Specifically of JSON:
       if (ActionBoyIsJSON(params)) {
         data = JSON.parse(params);
-        // Then we can leverage our JSON > AIA to handle everything
+        // Then we can leverage our JSON > AIA to handle everything, but we aren't validating JSON values
       } else if (/^\/version/.test(params)) {
-        // Otherwise it's likely to be aia rawtext, we won't validate it immediately.
         data = ActionBoyConvertAIAToJSON(params);
       } else {
         // This is an unrecognized format
+        alert("ActionSet cannot be constructed from type " + typeof params);
       }
     } else if (/object/i.test(typeof params)) {
-      if (params.typename && /file/i.test(params.typename)) {
-        // Should load AIA text through a file
+      if (params instanceof File) {
         params.encoding = "UTF8";
         params.open("r");
         var content = params.read();
         params.close();
-        data = ActionBoyConvertAIAToJSON(content);
+        if (/\.json$/.test(params.name)) data = JSON.parse(content);
+        else if (/\.aia$/.test(params.name))
+          data = ActionBoyConvertAIAToJSON(content);
       } else {
         // This is likely to be a File object or a JSON schema. Let's worry about Files later and assume:
         data = params;
       }
+    } else {
+      alert("Construct Mount Error: Unrecognized format");
     }
     if (data) {
-      for (var root in data) this[root] = data[root];
+      for (var key in data) {
+        if (key == "actions") {
+          this.actions = new Actions(data.actions);
+        } else this[key] = data[key];
+      }
     }
   } catch (err) {
     alert("Construct Error: " + err);
   }
-  function isJSON(str) {
+}
+ActionSet.prototype = {
+  load: function () {
     try {
-      str = JSON.parse(str);
+      var contents = this.toAIA();
+      var tmp = File(Folder.desktop + "/ActionBoytmp.aia");
+      tmp.open("w");
+      tmp.write(contents);
+      tmp.close();
+      app.loadAction(tmp);
+      tmp.remove();
       return true;
     } catch (err) {
       return false;
     }
-  }
-  // This is fine though sanitize/translate could probably be merged into a single function
-  function ActionBoyConvertAIAToJSON(rawtext) {
-    try {
-      var lines = ActionBoyFilter(
-        rawtext.split(/(\r\n|\r|\n)/g),
-        function (entry) {
-          return entry.replace(/(\r\n|\r|\n)/g, "").length;
-        }
-      );
-      var data = ActionBoyMap(lines, function (v, i, a) {
-        var child = {
-          raw: v,
-          index: i,
-          depth: /\t/.test(v) ? v.match(/\t/gm).length : 0,
-          parent: -1,
-          hasBrackets: /[\]\}]/.test(v),
-        };
-        if (child.depth || child.hasBrackets) {
-          for (var cc = i; !!cc; cc--) {
-            var lastDepth = /\t/.test(a[cc]) ? a[cc].match(/\t/gm).length : 0;
-            if (child.hasBrackets) {
-              var squareMatch = /\]/.test(v) && /\[/.test(a[cc]);
-              var curlyMatch = /\}/.test(v) && /\{/.test(a[cc]);
-              if (child.depth !== lastDepth) continue;
-              else if (curlyMatch || squareMatch) {
-                child.parent = cc;
-                break;
-              } else continue;
-            } else if (!child.hasBrackets && child.depth > lastDepth) {
-              child.parent = cc;
-              break;
-            } else continue;
-          }
-        }
-        return child;
-      });
-
-      var chain = [];
-      var rootProps = ActionBoyFilter(data, function (v) {
-        return v.parent < 0;
-      });
-      for (var cc = 0; cc < rootProps.length; cc++)
-        chain.push(ActionBoyRecurseForSchema(rootProps[cc], data));
-      var sanitizedSchema = ActionBoySanitizeSchema(chain);
-      return ActionBoyTranslateSchema(sanitizedSchema);
-    } catch (err) {
-      alert("Convert Error: " + err);
-    }
-  }
-  function ActionBoyRecurseForSchema(item, data) {
-    try {
-      var temp = item;
-      temp["children"] = ActionBoyMap(
-        ActionBoyFilter(data, function (child) {
-          return child.parent == item.index;
-        }),
-        function (child) {
-          return ActionBoyRecurseForSchema(child, data);
-        }
-      );
-      return temp;
-    } catch (err) {
-      alert("Recurse Schema Error: " + err);
-    }
-  }
-  function ActionBoyTranslateSchema(data, depth) {
-    try {
-      depth = depth || 0;
-      var result = {};
-      if (data && data.length && ActionBoyIsArray(data)) {
-        for (var i = 0; i < data.length; i++) {
-          var entry = data[i];
-          var isEnum = /^\/([^\s-]*)-\d{1,}/;
-          if (isEnum.test(ActionBoyTrim(entry.raw))) {
-            if (entry && entry.name) {
-              var enumName = entry.name.replace(/-.*/, "") + "s";
-              result[enumName] = result[enumName] || [];
-              if (entry.children && entry.children.length)
-                result[enumName].push(
-                  ActionBoyTranslateSchema(entry.children, depth + 1)
-                );
-            } else {
-              console.log("Something isn't iterating correctly:");
-              result["errorFlags"] = result["errorFlags"] || [];
-              result.errorFlags.push(entry);
-            }
-          } else {
-            // Otherwise we can simply pass in the value and type to know how to handle each property:
-            result[entry.name] = ActionBoySanitizeValue(
-              entry.value,
-              entry.type
-            );
-          }
-        }
-      }
-      return result;
-    } catch (err) {
-      alert("Translate Error: " + err);
-    }
-  }
-  function ActionBoySanitizeValue(value, type) {
-    var temp = ActionBoyTrim(value);
-    if (/hex/i.test(type)) {
-      temp = ActionBoyTrim(value.replace(/(\[|\])/gm, ""));
-      temp = ActionBoyFilter(temp.split(/\t{1,}/gm), function (i, ii) {
-        return i.length && ii && /^[a-f0-9]*$/.test(i);
-      }).join("");
-      temp = ActionBoyHexToAscii(temp);
-    } else if (/decimal/i.test(type)) temp = ActionBoyDecimalToAscii(value);
-    else if (!isNaN(Number(value))) {
-      // This is probably an integer of some kind. Just in case it fits a decimal format:
-      if (/^\d{10}$/.test(temp)) temp = ActionBoyDecimalToAscii(temp);
-      else temp = +value; // Otherwise, let's just convert it to a number
-    } else temp = value; // Chances are this is just a normal string
-    return temp;
-  }
-  // This is the only part of the process I'm very iffy on. It should be better than this.
-  function ActionBoySanitizeSchema(data) {
-    try {
-      var temp = [];
-      ActionBoyForEach(data, function (rootPropGroup) {
-        var rootClone = {
-          depth: rootPropGroup.depth,
-          raw: rootPropGroup.raw,
-          index: rootPropGroup.index,
-        };
-        // Diagnose and handle any propGroup which may need recursion, we want
-        // to collapse lines like "/name [ 8 120fda9011290 ]" from 4 lines to 1
-        if (rootPropGroup["children"] && rootPropGroup["children"].length) {
-          var isDeep = ActionBoyFilter(rootPropGroup["children"], function (i) {
-            return i.children && i.children.length;
-          }).length;
-
-          if (!isDeep) {
-            rootClone["value"] =
-              rootClone.raw +
-              ActionBoyMap(rootPropGroup.children, function (i) {
-                return i.raw;
-              }).join("");
-
-            // Damn. Could I make uglier code if I tried?
-            var str = ActionBoyTrim(rootClone.value);
-            rootClone["name"] = /\/([^\s]*)/.exec(str)[1];
-            str = ActionBoyTrim(str.replace(/^\/([^\s]*)/, ""));
-            rootClone.value = str;
-
-            if (/\{/.test(rootClone.value) && /\}/.test(rootClone.value)) {
-              rootClone["type"] = "container-B";
-              str = ActionBoyTrim(str.replace(/^(\{)|(\})$/gm, ""));
-
-              rootClone.value = str;
-              rootClone["children"] = ActionBoyMap(
-                str.split(/\t{1,}/gm),
-                function (subProp) {
-                  var subClone = {
-                    index: -1,
-                    depth: rootClone.depth + 1,
-                    name: ActionBoyTrim(subProp)
-                      .replace(/^\//, "")
-                      .replace(/\s.*/, ""),
-                    raw: subProp,
-                    value: ActionBoyTrim(
-                      ActionBoyTrim(subProp)
-                        .replace(/^\//, "")
-                        .replace(/^[\s]*/, "")
-                    ),
-                  };
-                  // Starting to see keys assigned within values on JSX,
-                  // something went wrong switching RegExp from string literals
-                  if (new RegExp(subClone.name).test(subClone.value))
-                    subClone.value = ActionBoyTrim(
-                      subClone.value.replace(subClone.name, "")
-                    );
-                  if (subClone.value + "" == "null")
-                    subClone.value = ActionBoyTrim(
-                      ActionBoyTrim(subProp).replace(/^\/[^\s]/, "")
-                    );
-
-                  return subClone;
-                }
-              );
-            } else if (/\[/.test(rootClone.value) && /\]/.test(rootClone.value))
-              rootClone["type"] = "hexadecimal";
-            else rootClone["type"] = "undefined-A";
-          } else {
-            rootClone["name"] = ActionBoyTrim(rootClone.raw).replace(/^\//, "");
-            rootClone.name = rootClone.name.match(/[^-]*-\d{1,}/)[0];
-            rootClone["type"] = "container-A";
-            rootClone["children"] = ActionBoySanitizeSchema(
-              rootPropGroup.children
-            );
-          }
-          temp.push(rootClone);
-        } else if (/^\t*\/[^\s]*/.test(rootPropGroup.raw)) {
-          // This is probably a one-line value:
-          rootClone["type"] = "param";
-          rootClone["value"] = ActionBoyTrim(rootPropGroup.raw);
-          if (/\/[^\s]*/.test(rootClone.value))
-            rootClone["name"] = /\/([^\s]*)/.exec(rootClone.value)[1];
-          else rootClone["name"] = "undefined-B";
-          rootClone.value = ActionBoyTrim(
-            rootClone.value.replace("/" + rootClone.name, "")
-          );
-          if (/^\d{10}$/.test(rootClone.value)) rootClone["type"] = "decimal";
-          temp.push(rootClone);
-        } else {
-          // This is almost certainly a closing bracket, empty newline, or format artifact with no real value.
-          // We don't need this and can ignore it.
-        }
-      });
-      return temp;
-    } catch (err) {
-      alert("Sanitize Schema Error: " + err);
-    }
-  }
-}
-ActionSet.prototype = {
-  load: function () {
-    alert("Not yet supported");
   },
   unload: function () {
     try {
@@ -596,9 +387,6 @@ ActionSet.prototype = {
     }
   },
   toJSON: function () {
-    return this.getJSONSchema();
-  },
-  toJSONString: function () {
     return JSON.stringify(this.getJSONSchema());
   },
   toAIA: function () {
@@ -806,6 +594,225 @@ ActionSet.prototype = {
     return recurseInto(this);
   },
 };
+function isJSON(str) {
+  try {
+    str = JSON.parse(str);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+// This is fine though sanitize/translate could probably be merged into a single function
+function ActionBoyConvertAIAToJSON(rawtext) {
+  try {
+    var lines = ActionBoyFilter(
+      rawtext.split(/(\r\n|\r|\n)/g),
+      function (entry) {
+        return entry.replace(/(\r\n|\r|\n)/g, "").length;
+      }
+    );
+    var data = ActionBoyMap(lines, function (v, i, a) {
+      var child = {
+        raw: v,
+        index: i,
+        depth: /\t/.test(v) ? v.match(/\t/gm).length : 0,
+        parent: -1,
+        hasBrackets: /[\]\}]/.test(v),
+      };
+      if (child.depth || child.hasBrackets) {
+        for (var cc = i; !!cc; cc--) {
+          var lastDepth = /\t/.test(a[cc]) ? a[cc].match(/\t/gm).length : 0;
+          if (child.hasBrackets) {
+            var squareMatch = /\]/.test(v) && /\[/.test(a[cc]);
+            var curlyMatch = /\}/.test(v) && /\{/.test(a[cc]);
+            if (child.depth !== lastDepth) continue;
+            else if (curlyMatch || squareMatch) {
+              child.parent = cc;
+              break;
+            } else continue;
+          } else if (!child.hasBrackets && child.depth > lastDepth) {
+            child.parent = cc;
+            break;
+          } else continue;
+        }
+      }
+      return child;
+    });
+    var chain = [];
+    var rootProps = ActionBoyFilter(data, function (v) {
+      return v.parent < 0;
+    });
+    for (var cc = 0; cc < rootProps.length; cc++)
+      chain.push(ActionBoyRecurseForSchema(rootProps[cc], data));
+    var sanitizedSchema = ActionBoySanitizeSchema(chain);
+    return ActionBoyTranslateSchema(sanitizedSchema);
+  } catch (err) {
+    alert("Convert Error: " + err);
+  }
+}
+function ActionBoyRecurseForSchema(item, data) {
+  try {
+    var temp = item;
+    temp["children"] = ActionBoyMap(
+      ActionBoyFilter(data, function (child) {
+        return child.parent == item.index;
+      }),
+      function (child) {
+        return ActionBoyRecurseForSchema(child, data);
+      }
+    );
+    return temp;
+  } catch (err) {
+    alert("Recurse Schema Error: " + err);
+  }
+}
+function ActionBoyTranslateSchema(data, depth) {
+  try {
+    depth = depth || 0;
+    var result = {};
+    if (data && data.length && ActionBoyIsArray(data)) {
+      for (var i = 0; i < data.length; i++) {
+        var entry = data[i];
+        var isEnum = /^\/([^\s-]*)-\d{1,}/;
+        if (isEnum.test(ActionBoyTrim(entry.raw))) {
+          if (entry && entry.name) {
+            var enumName = entry.name.replace(/-.*/, "") + "s";
+            result[enumName] = result[enumName] || [];
+            if (entry.children && entry.children.length)
+              result[enumName].push(
+                ActionBoyTranslateSchema(entry.children, depth + 1)
+              );
+          } else {
+            console.log("Something isn't iterating correctly:");
+            result["errorFlags"] = result["errorFlags"] || [];
+            result.errorFlags.push(entry);
+          }
+        } else {
+          // Otherwise we can simply pass in the value and type to know how to handle each property:
+          result[entry.name] = ActionBoySanitizeValue(entry.value, entry.type);
+        }
+      }
+    }
+    return result;
+  } catch (err) {
+    alert("Translate Error: " + err);
+  }
+}
+function ActionBoySanitizeValue(value, type) {
+  var temp = ActionBoyTrim(value);
+  if (/hex/i.test(type)) {
+    temp = ActionBoyTrim(value.replace(/(\[|\])/gm, ""));
+    temp = ActionBoyFilter(temp.split(/\t{1,}/gm), function (i, ii) {
+      return i.length && ii && /^[a-f0-9]*$/.test(i);
+    }).join("");
+    temp = ActionBoyHexToAscii(temp);
+  } else if (/decimal/i.test(type)) temp = ActionBoyDecimalToAscii(value);
+  else if (!isNaN(Number(value))) {
+    // This is probably an integer of some kind. Just in case it fits a decimal format:
+    if (/^\d{10}$/.test(temp)) temp = ActionBoyDecimalToAscii(temp);
+    else temp = +value; // Otherwise, let's just convert it to a number
+  } else temp = value; // Chances are this is just a normal string
+  return temp;
+}
+// This is the only part of the process I'm very iffy on. It should be better than this.
+function ActionBoySanitizeSchema(data) {
+  try {
+    var temp = [];
+    ActionBoyForEach(data, function (rootPropGroup) {
+      var rootClone = {
+        depth: rootPropGroup.depth,
+        raw: rootPropGroup.raw,
+        index: rootPropGroup.index,
+      };
+      // Diagnose and handle any propGroup which may need recursion, we want
+      // to collapse lines like "/name [ 8 120fda9011290 ]" from 4 lines to 1
+      if (rootPropGroup["children"] && rootPropGroup["children"].length) {
+        var isDeep = ActionBoyFilter(rootPropGroup["children"], function (i) {
+          return i.children && i.children.length;
+        }).length;
+
+        if (!isDeep) {
+          rootClone["value"] =
+            rootClone.raw +
+            ActionBoyMap(rootPropGroup.children, function (i) {
+              return i.raw;
+            }).join("");
+
+          // Damn. Could I make uglier code if I tried?
+          var str = ActionBoyTrim(rootClone.value);
+          rootClone["name"] = /\/([^\s]*)/.exec(str)[1];
+          str = ActionBoyTrim(str.replace(/^\/([^\s]*)/, ""));
+          rootClone.value = str;
+
+          if (/\{/.test(rootClone.value) && /\}/.test(rootClone.value)) {
+            rootClone["type"] = "container-B";
+            str = ActionBoyTrim(str.replace(/^(\{)|(\})$/gm, ""));
+
+            rootClone.value = str;
+            rootClone["children"] = ActionBoyMap(
+              str.split(/\t{1,}/gm),
+              function (subProp) {
+                var subClone = {
+                  index: -1,
+                  depth: rootClone.depth + 1,
+                  name: ActionBoyTrim(subProp)
+                    .replace(/^\//, "")
+                    .replace(/\s.*/, ""),
+                  raw: subProp,
+                  value: ActionBoyTrim(
+                    ActionBoyTrim(subProp)
+                      .replace(/^\//, "")
+                      .replace(/^[\s]*/, "")
+                  ),
+                };
+                // Starting to see keys assigned within values on JSX,
+                // something went wrong switching RegExp from string literals
+                if (new RegExp(subClone.name).test(subClone.value))
+                  subClone.value = ActionBoyTrim(
+                    subClone.value.replace(subClone.name, "")
+                  );
+                if (subClone.value + "" == "null")
+                  subClone.value = ActionBoyTrim(
+                    ActionBoyTrim(subProp).replace(/^\/[^\s]/, "")
+                  );
+
+                return subClone;
+              }
+            );
+          } else if (/\[/.test(rootClone.value) && /\]/.test(rootClone.value))
+            rootClone["type"] = "hexadecimal";
+          else rootClone["type"] = "undefined-A";
+        } else {
+          rootClone["name"] = ActionBoyTrim(rootClone.raw).replace(/^\//, "");
+          rootClone.name = rootClone.name.match(/[^-]*-\d{1,}/)[0];
+          rootClone["type"] = "container-A";
+          rootClone["children"] = ActionBoySanitizeSchema(
+            rootPropGroup.children
+          );
+        }
+        temp.push(rootClone);
+      } else if (/^\t*\/[^\s]*/.test(rootPropGroup.raw)) {
+        // This is probably a one-line value:
+        rootClone["type"] = "param";
+        rootClone["value"] = ActionBoyTrim(rootPropGroup.raw);
+        if (/\/[^\s]*/.test(rootClone.value))
+          rootClone["name"] = /\/([^\s]*)/.exec(rootClone.value)[1];
+        else rootClone["name"] = "undefined-B";
+        rootClone.value = ActionBoyTrim(
+          rootClone.value.replace("/" + rootClone.name, "")
+        );
+        if (/^\d{10}$/.test(rootClone.value)) rootClone["type"] = "decimal";
+        temp.push(rootClone);
+      } else {
+        // This is almost certainly a closing bracket, empty newline, or format artifact with no real value.
+        // We don't need this and can ignore it.
+      }
+    });
+    return temp;
+  } catch (err) {
+    alert("Sanitize Schema Error: " + err);
+  }
+}
 function ActionBoyAsciiToHex(input) {
   var output = "";
   for (var i = 0; i < input.toString().length; i++)
@@ -862,28 +869,3 @@ function ActionBoyFilter(array, callback, debug) {
 function ActionBoyForEach(array, callback) {
   for (var i = 0; i < array.length; i++) callback(array[i], i, array);
 }
-// ---------------------------------------- //
-
-var sampleSet = new ActionSet(
-  "/version 3\r\n/name [ 9\r\n\t73616d706c65536574\r\n]\r\n/isOpen 1\r\n/actionCount 2\r\n/action-1 {\r\n\t/name [ 14\r\n\t\t4170706c7946696c6c436f6c6f72\r\n\t]\r\n\t/keyIndex 8\r\n\t/colorIndex 5\r\n\t/isOpen 0\r\n\t/eventCount 1\r\n\t/event-1 {\r\n\t\t/useRulersIn1stQuadrant 0\r\n\t\t/internalName (ai_plugin_setColor)\r\n\t\t/localizedName [ 9\r\n\t\t\t53657420636f6c6f72\r\n\t\t]\r\n\t\t/isOpen 1\r\n\t\t/isOn 1\r\n\t\t/hasDialog 0\r\n\t\t/parameterCount 6\r\n\t\t/parameter-1 {\r\n\t\t\t/key 1768186740\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (ustring)\r\n\t\t\t/value [ 10\r\n\t\t\t\t46696c6c20636f6c6f72\r\n\t\t\t]\r\n\t\t}\r\n\t\t/parameter-2 {\r\n\t\t\t/key 1718185068\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (boolean)\r\n\t\t\t/value 1\r\n\t\t}\r\n\t\t/parameter-3 {\r\n\t\t\t/key 1954115685\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (enumerated)\r\n\t\t\t/name [ 9\r\n\t\t\t\t52474220636f6c6f72\r\n\t\t\t]\r\n\t\t\t/value 2\r\n\t\t}\r\n\t\t/parameter-4 {\r\n\t\t\t/key 1919247406\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 234.0\r\n\t\t}\r\n\t\t/parameter-5 {\r\n\t\t\t/key 1735550318\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 10.0\r\n\t\t}\r\n\t\t/parameter-6 {\r\n\t\t\t/key 1651275109\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 10.0\r\n\t\t}\r\n\t}\r\n}\r\n/action-2 {\r\n\t/name [ 16\r\n\t\t4170706c795374726f6b65436f6c6f72\r\n\t]\r\n\t/keyIndex 0\r\n\t/colorIndex 0\r\n\t/isOpen 1\r\n\t/eventCount 1\r\n\t/event-1 {\r\n\t\t/useRulersIn1stQuadrant 0\r\n\t\t/internalName (ai_plugin_setColor)\r\n\t\t/localizedName [ 9\r\n\t\t\t53657420636f6c6f72\r\n\t\t]\r\n\t\t/isOpen 0\r\n\t\t/isOn 1\r\n\t\t/hasDialog 0\r\n\t\t/parameterCount 6\r\n\t\t/parameter-1 {\r\n\t\t\t/key 1768186740\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (ustring)\r\n\t\t\t/value [ 12\r\n\t\t\t\t5374726f6b6520636f6c6f72\r\n\t\t\t]\r\n\t\t}\r\n\t\t/parameter-2 {\r\n\t\t\t/key 1718185068\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (boolean)\r\n\t\t\t/value 0\r\n\t\t}\r\n\t\t/parameter-3 {\r\n\t\t\t/key 1954115685\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (enumerated)\r\n\t\t\t/name [ 9\r\n\t\t\t\t52474220636f6c6f72\r\n\t\t\t]\r\n\t\t\t/value 2\r\n\t\t}\r\n\t\t/parameter-4 {\r\n\t\t\t/key 1919247406\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 239.0\r\n\t\t}\r\n\t\t/parameter-5 {\r\n\t\t\t/key 1735550318\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 34.0\r\n\t\t}\r\n\t\t/parameter-6 {\r\n\t\t\t/key 1651275109\r\n\t\t\t/showInPalette -1\r\n\t\t\t/type (real)\r\n\t\t\t/value 34.0\r\n\t\t}\r\n\t}\r\n}"
-);
-
-var tests = [
-  {
-    contents: JSON.stringify(sampleSet.getJSONSchema()),
-    dest: Folder.desktop + "/output.json",
-  },
-  {
-    contents: sampleSet.toAIA(),
-    dest: Folder.desktop + "/output.aia",
-  },
-];
-
-for (var ind = 0; ind < tests.length; ind++) {
-  var testCase = tests[ind];
-  var tmp = File(testCase.dest);
-  tmp.open("w");
-  tmp.write(testCase.contents);
-  tmp.close();
-}
-alert("Done");

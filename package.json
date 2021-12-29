@@ -1,10 +1,11 @@
 {
   "name": "actionsuiteilst",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "The ideal way to use actions in Illustrator scripting",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "minify": "minify ActionSuite.js > ActionSuite.min.js"
   },
   "keywords": [],
   "author": "Thomas Scharstein II <tom@inventsable.cc>",
