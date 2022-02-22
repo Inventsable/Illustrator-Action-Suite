@@ -2,15 +2,14 @@
 var rootPath = new File($.fileName).parent; // Folder path to write tests to
 
 
-var fakeSet = new ActionSet({
-  name: "Test"
-})
-
-alert(fakeSet.actions)
-alert(fakeSet.actions.parent)
+// var fakeSet = new ActionSet({
+//   name: "Test"
+// })
+// alert(fakeSet.actions)
+// alert(fakeSet.actions.parent)
 
 // Testing constructors
-// var aiaSet = new ActionSet(new File(rootPath + "/input.aia"));
+var aiaSet = new ActionSet(new File(rootPath + "/input.aia"));
 // var jsonSet = new ActionSet(new File(rootPath + "/input.json"));
 
 // Testing fully dynamic construction:
@@ -72,8 +71,22 @@ alert(fakeSet.actions.parent)
 //     },
 //   ],
 // });
-// var aiaParentCheck = aiaSet.actions[0].parent;
-// alert(aiaParentCheck)
+var parentCheck1 = printKeys(aiaSet.actions.parent, "ActionCollection: ");
+alert(parentCheck1)
+
+
+// Action is still missing correct inheritance
+var parentCheck2 = printKeys(aiaSet.actions[0].parent, "Action: ");
+alert(parentCheck2)
+
+function printKeys(obj, type) {
+  var temp = []
+  for (var key in obj)
+    temp.push(key)
+  return type + temp.join(",")
+}
+
+// alert(aiaSet.actions[0].parent.parent.name)
 // var jsonParentCheck = aiaSet.actions[0].parent.parent.name;
 // var aiaParentCheck = aiaSet.actions[0].parent.parent.name;
 // alert(jsonParentCheck)

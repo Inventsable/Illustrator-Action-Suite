@@ -218,6 +218,7 @@ function ActionParameters(arr, parent) {
   });
   arr.parent = parent;
   arr.typename = "ActionParameters";
+  // Could assign parenting chain here (feels redundant)
   return arr;
 }
 function ActionEvents(arr, parent) {
@@ -240,12 +241,10 @@ function ActionEvents(arr, parent) {
   });
   arr.parent = parent;
   arr.typename = "ActionEvents";
+  // Could assign parenting chain here (feels redundant)
   return arr;
 }
 function Actions(arr, parent, gID) {
-  if (!parent) {
-    alert("Created with no parent: " + gID);
-  }
   arr = arr || [];
   extendPrototype(arr, {
     add: function () {
@@ -269,6 +268,10 @@ function Actions(arr, parent, gID) {
   });
   arr.parent = parent || null;
   arr.typename = "ActionCollection";
+  var self = this;
+  if (arr.length)
+    for (var ind = 0; ind < arr.length; ind++)
+      if (!arr[ind].parent) arr[ind]["parent"] = self;
   return arr;
 }
 
@@ -322,6 +325,7 @@ Action.prototype.run = function () {
 };
 
 function ActionSet(params) {
+  var self = this;
   this.typename = "ActionSet";
   this.name = "";
   this.version = 3;
@@ -359,7 +363,7 @@ function ActionSet(params) {
     }
     if (data) {
       for (var key in data) {
-        if (key == "actions") this.actions = new Actions(data.actions, this, 2);
+        if (key == "actions") this.actions = new Actions(data.actions, self, 2);
         else if (key == "actionCount") this.actionCount = data.actions.length;
         else this[key] = data[key];
       }
@@ -368,11 +372,12 @@ function ActionSet(params) {
         this.actions.length &&
         this.actions.typename == "ActionCollection"
       ) {
+        // alert("Does have children?");
         // ? This returns no parent chain
       } else {
         // But this does? If ActionSet is generated with no actions key?
         // What gives?
-        alert("Something went wrong");
+        alert("Something went wrong, ActionSet.actions has no parent");
       }
     }
   } catch (err) {
