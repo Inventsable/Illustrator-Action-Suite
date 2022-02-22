@@ -4,7 +4,7 @@
 
 # ActionSuite
 
-Extended Action classses for the Illustrator Scripting API
+Extended Action classes for the Illustrator Scripting API
 
 ---
 
