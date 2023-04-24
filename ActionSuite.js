@@ -372,11 +372,9 @@ function ActionSet(params) {
         this.actions.length &&
         this.actions.typename == "ActionCollection"
       ) {
-        // alert("Does have children?");
         // ? This returns no parent chain
       } else {
         // But this does? If ActionSet is generated with no actions key?
-        // What gives?
         alert("Something went wrong, ActionSet.actions has no parent");
       }
     }
@@ -408,7 +406,19 @@ ActionSet.prototype = {
     }
   },
   toJSON: function () {
-    return JSON.stringify(this.getJSONSchema());
+    var result = this.sanitizeJSON(this.getJSONSchema());
+    return JSON.stringify(result);
+  },
+  sanitizeJSON: function (obj) {
+    // For whatever reason, my recursive RegExp isn't catching parent key/values during JSON conversion.
+    // For now I'll manually snip them out:
+    obj.actions = ActionBoyMap(obj.actions, function (value) {
+      if (value.hasOwnProperty("parent")) delete value.parent;
+      return value;
+    });
+    // Also noticing that minified versions of this script result in Unicode symbols, rather than full strings.
+    // Don't want this as it breaks the human readability
+    return obj;
   },
   toAIA: function () {
     function ActionBoyConvertJSONToAIA(obj) {
@@ -546,8 +556,12 @@ ActionSet.prototype = {
         }).join("\r\n") + "\r\n"
       );
     }
-    return ActionBoyConvertJSONToAIA(this.getJSONSchema());
+    return ActionBoyConvertJSONToAIA(
+      this.sanitizeJSON(this.getJSONSchema())
+    ).replace(/\n\t*\n/, /\n/);
+    // Remove redundant extra newlines inside hex value [] brackets for small int
   },
+  // Noticing that parent is still included in JSON despite being on omission list here
   getJSONSchema: function () {
     function recurseInto(obj) {
       var shouldOmit = new RegExp(
@@ -568,6 +582,7 @@ ActionSet.prototype = {
               "rawtext",
               "parent",
               "toAIA",
+              "sanitizeJSON",
             ].join("|") +
             ")$"
         ),

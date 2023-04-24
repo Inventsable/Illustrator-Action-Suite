@@ -1,0 +1,525 @@
+{
+  "version": 3,
+  "name": "Test Actions",
+  "isOpen": 1,
+  "actionCount": 8,
+  "actions": [
+    {
+      "name": "Opacity 60 (selection)",
+      "keyIndex": 0,
+      "colorIndex": 7,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_transparency)",
+          "localizedName": "Transparency",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "opac",
+              "showInPalette": 1,
+              "type": "(unit real)",
+              "value": 60.0000038147,
+              "unit": 592474723
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Revert",
+      "keyIndex": 0,
+      "colorIndex": 7,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(adobe_revertDocument)",
+          "localizedName": "Revert",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 0
+        }
+      ]
+    },
+    {
+      "name": "Delete Unused Panel Items",
+      "keyIndex": 0,
+      "colorIndex": 0,
+      "isOpen": 0,
+      "eventCount": 12,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_symbol_palette)",
+          "localizedName": "Symbols",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "Select All Unused",
+              "value": 12
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_symbol_palette)",
+          "localizedName": "Symbols",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "Delete Symbol",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(adobe_stop)",
+          "localizedName": "Stop",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 2,
+          "parameters": [
+            {
+              "key": "text",
+              "showInPalette": 0,
+              "type": "(ustring)",
+              "value": ""
+            },
+            {
+              "key": "cont",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_styles)",
+          "localizedName": "Graphic Styles",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Select All Unused",
+              "value": 14
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_styles)",
+          "localizedName": "Graphic Styles",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Delete Style",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(adobe_stop)",
+          "localizedName": "Stop",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 2,
+          "parameters": [
+            {
+              "key": "text",
+              "showInPalette": 0,
+              "type": "(ustring)",
+              "value": ""
+            },
+            {
+              "key": "cont",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_brush)",
+          "localizedName": "Brush",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Select All Unused",
+              "value": 8
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_brush)",
+          "localizedName": "Brush",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Delete Brush",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(adobe_stop)",
+          "localizedName": "Stop",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 2,
+          "parameters": [
+            {
+              "key": "text",
+              "showInPalette": 0,
+              "type": "(ustring)",
+              "value": ""
+            },
+            {
+              "key": "cont",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_swatches)",
+          "localizedName": "Swatches",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Select All Unused",
+              "value": 11
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_swatches)",
+          "localizedName": "Swatches",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "menu",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": "Delete Swatch",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(adobe_stop)",
+          "localizedName": "Stop",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 2,
+          "parameters": [
+            {
+              "key": "text",
+              "showInPalette": 0,
+              "type": "(ustring)",
+              "value": ""
+            },
+            {
+              "key": "cont",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reflect Horizontal",
+      "keyIndex": 0,
+      "colorIndex": 7,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(adobe_reflect)",
+          "localizedName": "Reflect",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 4,
+          "parameters": [
+            {
+              "key": "angl",
+              "showInPalette": 1,
+              "type": "(unit real)",
+              "value": 0,
+              "unit": 591490663
+            },
+            {
+              "key": "copy",
+              "showInPalette": 1,
+              "type": "(boolean)",
+              "value": 0
+            },
+            {
+              "key": "detX",
+              "showInPalette": 1,
+              "type": "(unit real)",
+              "value": -13.22265625,
+              "unit": 592476268
+            },
+            {
+              "key": "detY",
+              "showInPalette": 1,
+              "type": "(unit real)",
+              "value": -2.6201171875,
+              "unit": 592476268
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Unite (selection)",
+      "keyIndex": 0,
+      "colorIndex": 7,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 1,
+          "internalName": "(ai_plugin_pathfinder)",
+          "localizedName": "Pathfinder",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 1,
+          "parameters": [
+            {
+              "key": "name",
+              "showInPalette": 1,
+              "type": "(enumerated)",
+              "name": " Unite",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rasterize (selection)",
+      "keyIndex": 0,
+      "colorIndex": 7,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(ai_plugin_rasterize)",
+          "localizedName": "Rasterize",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 1,
+          "showDialog": 0,
+          "parameterCount": 8,
+          "parameters": [
+            {
+              "key": "colr",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "RGB",
+              "value": 0
+            },
+            {
+              "key": "dpi.",
+              "showInPalette": -1,
+              "type": "(integer)",
+              "value": 150
+            },
+            {
+              "key": "bkgd",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "White",
+              "value": 0
+            },
+            {
+              "key": "type",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "Outline",
+              "value": 1
+            },
+            {
+              "key": "ali+",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "None",
+              "value": 0
+            },
+            {
+              "key": "mask",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 0
+            },
+            {
+              "key": "pspt",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 0
+            },
+            {
+              "key": "padd",
+              "showInPalette": -1,
+              "type": "(unit real)",
+              "value": 0,
+              "unit": 592476268
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Add Anchors",
+      "keyIndex": 53,
+      "colorIndex": 0,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(ai_plugin_AddAnchorPoint)",
+          "localizedName": "Add Anchor Points",
+          "isOpen": 0,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 0
+        }
+      ]
+    },
+    {
+      "name": "Set Fill",
+      "keyIndex": 0,
+      "colorIndex": 0,
+      "isOpen": 0,
+      "eventCount": 1,
+      "events": [
+        {
+          "useRulersIn1stQuadrant": 0,
+          "internalName": "(ai_plugin_setColor)",
+          "localizedName": "Set color",
+          "isOpen": 1,
+          "isOn": 1,
+          "hasDialog": 0,
+          "parameterCount": 6,
+          "parameters": [
+            {
+              "key": "idct",
+              "showInPalette": -1,
+              "type": "(ustring)",
+              "value": "Fill color"
+            },
+            {
+              "key": "fill",
+              "showInPalette": -1,
+              "type": "(boolean)",
+              "value": 1
+            },
+            {
+              "key": "type",
+              "showInPalette": -1,
+              "type": "(enumerated)",
+              "name": "RGB color",
+              "value": 2
+            },
+            {
+              "key": "red.",
+              "showInPalette": -1,
+              "type": "(real)",
+              "value": 221
+            },
+            {
+              "key": "gren",
+              "showInPalette": -1,
+              "type": "(real)",
+              "value": 0
+            },
+            { "key": "blue", "showInPalette": -1, "type": "(real)", "value": 0 }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "js": {
+    "format": {
+      "ascii_only": true
+    },
+    "compress": {
+      "unsafe": true
+    },
+    "mangle": false
+  }
+}

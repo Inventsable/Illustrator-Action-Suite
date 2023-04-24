@@ -87,7 +87,7 @@ mySet.load();
 
 var corruptedData = new ActionSet("~/desktop/sampleActions.aia");
 var status = mySet.load();
-alert(Status.error); // false, something went wrong. The application refused the load, we see the error message here
+alert(status.error); // false, something went wrong. The application refused the load, we see the error message here
 ```
 
 ## **run**(actionName) => `Boolean`
